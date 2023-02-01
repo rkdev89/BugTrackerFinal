@@ -11,7 +11,7 @@ namespace BugTracker_API.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public Status Status { get; set; }
-        public DateOnly DateCreated { get; set; }
+        public DateTime DateCreated { get; set; }
         public User User { get; set; }
     }
 }

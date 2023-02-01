@@ -12,7 +12,7 @@ namespace BugTracker_API.Models.Dto
         [Required]
         public Status Status { get; set; }
         [Required]
-        public DateOnly DateCreated { get; set; }
+        public DateTime DateCreated { get; set; }
         [Required]
         public UserDTO User { get; set; }
     }
