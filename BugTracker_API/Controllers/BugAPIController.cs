@@ -1,5 +1,4 @@
 ﻿using BugTracker_API.Data;
-using BugTracker_API.Logging;
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -10,18 +9,11 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class BugAPIController : ControllerBase
     {
-        private readonly ILogging _logger;
-
-        public BugAPIController(ILogging logging)
-        {
-            _logger = logging;
-        }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<BugDTO>> GetBugs()
         {
-            _logger.Log("Getting all bugs", "");
             return Ok(BugStore.bugList);
         }
 
@@ -33,7 +25,6 @@ namespace BugTracker_API.Controllers
         {
             if (id == 0)
             {
-                _logger.Log("Get Bug error with Id " + id, "");
                 return BadRequest();
             }
             var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);

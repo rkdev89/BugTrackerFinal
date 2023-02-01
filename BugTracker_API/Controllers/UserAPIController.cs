@@ -1,5 +1,4 @@
 ﻿using BugTracker_API.Data;
-using BugTracker_API.Logging;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,17 +8,11 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class UserAPIController : ControllerBase
     {
-        private readonly ILogging _logger;
-        public UserAPIController(ILogging logger)
-        {
-            _logger= logger;
-        }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<BugDTO>> GetUsers()
         {
-            _logger.Log("Getting all users", "");
             return Ok(UserStore.userList);
         }
 
@@ -31,7 +24,6 @@ namespace BugTracker_API.Controllers
         {
             if (id == 0)
             {
-                _logger.Log("Get User error with Id " + id,"error");
                 return BadRequest();
             }
             var user = UserStore.userList.FirstOrDefault(x => x.UserId == id);
