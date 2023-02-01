@@ -4,6 +4,7 @@ namespace BugTracker_API.Models.Dto
 {
     public class BugDTO
     {
+        [Key]
         public int BugId { get; set; }
         [Required]
         public string Title { get; set; }
@@ -11,7 +12,7 @@ namespace BugTracker_API.Models.Dto
         [Required]
         public Status Status { get; set; }
         [Required]
-        public DateTime DateCreated { get; set; }
+        public DateOnly DateCreated { get; set; }
         [Required]
         public UserDTO User { get; set; }
     }
