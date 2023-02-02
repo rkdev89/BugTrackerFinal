@@ -2,6 +2,7 @@
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BugTracker_API.Controllers
 {
@@ -17,22 +18,22 @@ namespace BugTracker_API.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult<IEnumerable<BugDTO>> GetBugs()
+        public async Task<ActionResult<IEnumerable<BugDTO>>> GetBugs()
         {
-            return Ok(_db.Bugs.ToList());
+            return Ok(await _db.Bugs.ToListAsync());
         }
 
         [HttpGet("{id::int}", Name ="GetBug")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<BugDTO> GetBug(int id)
+        public async Task<ActionResult<BugDTO>> GetBug(int id)
         {
             if (id == 0)
             {
                 return BadRequest();
             }
-            var bug = _db.Bugs.FirstOrDefault(x => x.Id == id);
+            var bug = await _db.Bugs.FirstOrDefaultAsync(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
@@ -45,7 +46,7 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<BugDTO> CreateBug([FromBody]BugCreateDTO bugDTO)
+        public async Task<ActionResult<BugDTO>> CreateBug([FromBody]BugCreateDTO bugDTO)
         {
             if (bugDTO == null)
             {
@@ -62,8 +63,8 @@ namespace BugTracker_API.Controllers
                 UserId= bugDTO.UserId                
             };
 
-            _db.Bugs.Add(model);
-            _db.SaveChanges();
+            await _db.Bugs.AddAsync(model);
+            await _db.SaveChangesAsync();
 
             return CreatedAtRoute("GetBug", new {id = model.Id }, model);
         }
@@ -72,20 +73,20 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult DeleteBug(int id)
+        public async Task<IActionResult> DeleteBug(int id)
         {
             if (id == 0)
             {
                 return BadRequest();
             }
-            var bug = _db.Bugs.FirstOrDefault(x => x.Id == id);
+            var bug = await _db.Bugs.FirstOrDefaultAsync(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
             }
 
             _db.Bugs.Remove(bug);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
@@ -94,7 +95,7 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateBug(int id, [FromBody]BugUpdateDTO bugDTO)
+        public async Task<IActionResult> UpdateBug(int id, [FromBody]BugUpdateDTO bugDTO)
         {
             if (bugDTO == null || id != bugDTO.Id)
             {
@@ -119,7 +120,7 @@ namespace BugTracker_API.Controllers
             };
 
             _db.Bugs.Update(model);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
