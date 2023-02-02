@@ -9,12 +9,17 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class BugAPIController : ControllerBase
     {
+        private readonly ApplicationDbContext _db;
+        public BugAPIController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<BugDTO>> GetBugs()
         {
-            return Ok(BugStore.bugList);
+            return Ok(_db.Bugs.ToList());
         }
 
         [HttpGet("{id::int}", Name ="GetBug")]
@@ -27,7 +32,7 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);
+            var bug = _db.Bugs.FirstOrDefault(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
@@ -40,19 +45,27 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<BugDTO> CreateBug([FromBody]BugDTO bugDTO)
+        public ActionResult<BugDTO> CreateBug([FromBody]BugCreateDTO bugDTO)
         {
             if (bugDTO == null)
             {
                 return BadRequest(bugDTO);
             }
-            if (bugDTO.BugId > 0)
+
+            Bug model = new()
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-            bugDTO.BugId = BugStore.bugList.OrderByDescending(x => x.BugId).FirstOrDefault().BugId + 1;
-            BugStore.bugList.Add(bugDTO);
-            return CreatedAtRoute("GetBug", new {id = bugDTO.BugId }, bugDTO);
+                Title = bugDTO.Title,
+                Description = bugDTO.Description,
+                DateCreated = bugDTO.DateCreated,
+                Status = bugDTO.Status,
+                User= bugDTO.User,
+                UserId= bugDTO.UserId                
+            };
+
+            _db.Bugs.Add(model);
+            _db.SaveChanges();
+
+            return CreatedAtRoute("GetBug", new {id = model.Id }, model);
         }
 
         [HttpDelete("{id::int}", Name="DeleteBug")]
@@ -65,12 +78,15 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);
+            var bug = _db.Bugs.FirstOrDefault(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
             }
-            BugStore.bugList.Remove(bug);
+
+            _db.Bugs.Remove(bug);
+            _db.SaveChanges();
+
             return NoContent();
         }
 
@@ -78,18 +94,32 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateBug(int id, [FromBody]BugDTO bugDTO)
+        public IActionResult UpdateBug(int id, [FromBody]BugUpdateDTO bugDTO)
         {
-            if (bugDTO == null || id != bugDTO.BugId)
+            if (bugDTO == null || id != bugDTO.Id)
             {
                 return BadRequest();
             }
-            var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);
-            bug.Title = bugDTO.Title;
-            bug.Description = bugDTO.Description;
-            bug.Status = bugDTO.Status;
-            bug.DateCreated = bugDTO.DateCreated;
-            bug.User.UserId = bugDTO.User.UserId;
+            //var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);
+            //bug.Title = bugDTO.Title;
+            //bug.Description = bugDTO.Description;
+            //bug.Status = bugDTO.Status;
+            //bug.DateCreated = bugDTO.DateCreated;
+            //bug.User.UserId = bugDTO.User.UserId;
+
+            Bug model = new()
+            {
+                Id = bugDTO.Id,
+                Title = bugDTO.Title,
+                Description = bugDTO.Description,
+                DateCreated = bugDTO.DateCreated,
+                Status = bugDTO.Status,
+                User = bugDTO.User,
+                UserId = bugDTO.UserId
+            };
+
+            _db.Bugs.Update(model);
+            _db.SaveChanges();
 
             return NoContent();
         }

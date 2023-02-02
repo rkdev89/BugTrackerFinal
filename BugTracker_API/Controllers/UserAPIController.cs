@@ -1,4 +1,5 @@
 ﻿using BugTracker_API.Data;
+using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,12 +9,17 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class UserAPIController : ControllerBase
     {
+        private readonly ApplicationDbContext _db;
+        public UserAPIController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<BugDTO>> GetUsers()
         {
-            return Ok(UserStore.userList);
+            return Ok(_db.Users.ToList());
         }
 
         [HttpGet("{id::int}", Name = "GetUser")]
@@ -26,7 +32,7 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var user = UserStore.userList.FirstOrDefault(x => x.UserId == id);
+            var user = _db.Users.FirstOrDefault(x => x.Id == id);
             if (user == null)
             {
                 return NotFound();
@@ -45,14 +51,22 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest(userDTO);
             }
-            if (userDTO.UserId > 0)
+            if (userDTO.Id > 0)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            userDTO.UserId = UserStore.userList.OrderByDescending(x => x.UserId).FirstOrDefault().UserId + 1;
-            UserStore.userList.Add(userDTO);
-            return CreatedAtRoute("GetUser", new { id = userDTO.UserId }, userDTO);
+            User model = new()
+            {
+                Id = userDTO.Id,
+                UserName = userDTO.UserName,
+                Bugs = userDTO.Bugs,
+            };
+
+            _db.Users.Add(model);
+            _db.SaveChanges();
+
+            return CreatedAtRoute("GetUser", new { id = userDTO.Id }, userDTO);
         }
 
         [HttpDelete("{id::int}", Name = "DeleteUser")]
@@ -65,12 +79,15 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var user = UserStore.userList.FirstOrDefault(x => x.UserId == id);
+            var user = _db.Users.FirstOrDefault(x => x.Id == id);
             if (user == null)
             {
                 return NotFound();
             }
-            UserStore.userList.Remove(user);
+
+            _db.Users.Remove(user);
+            _db.SaveChanges();
+
             return NoContent();
         }
 
@@ -80,13 +97,18 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult UpdateUser(int id, [FromBody] UserDTO userDTO)
         {
-            if (userDTO == null || id != userDTO.UserId)
+            if (userDTO == null || id != userDTO.Id)
             {
                 return BadRequest();
             }
-            var user = UserStore.userList.FirstOrDefault(x => x.UserId == id);
-            user.UserName = userDTO.UserName;
-
+            User model = new()
+            {
+                Id = userDTO.Id,
+                UserName = userDTO.UserName,
+                Bugs = userDTO.Bugs,
+            };
+            _db.Users.Update(model);
+            _db.SaveChanges();
             return NoContent();
         }
     }

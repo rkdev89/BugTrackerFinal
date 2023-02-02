@@ -2,10 +2,8 @@
 
 namespace BugTracker_API.Models.Dto
 {
-    public class UserDTO
+    public class UserCreateDTO
     {
-        [Key]
-        public int Id { get; set; }
         [Required]
         [MaxLength(30)]
         public string UserName { get; set; }

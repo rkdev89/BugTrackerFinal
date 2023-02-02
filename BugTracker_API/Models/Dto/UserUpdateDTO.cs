@@ -2,9 +2,9 @@
 
 namespace BugTracker_API.Models.Dto
 {
-    public class UserDTO
+    public class UserUpdateDTO
     {
-        [Key]
+        [Required]
         public int Id { get; set; }
         [Required]
         [MaxLength(30)]
