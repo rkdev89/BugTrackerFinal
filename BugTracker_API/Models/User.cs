@@ -7,7 +7,8 @@ namespace BugTracker_API.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int UserId { get; set; }
+        public int Id { get; set; }
         public string UserName { get; set; }
+        public ICollection<Bug> Bugs{ get; set; }
     }
 }

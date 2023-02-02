@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BugTrackerAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230201224319_AddBugAndUserTables")]
-    partial class AddBugAndUserTables
+    [Migration("20230202090703_SeedTable")]
+    partial class SeedTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,12 +77,17 @@ namespace BugTrackerAPI.Migrations
             modelBuilder.Entity("BugTracker_API.Models.Bug", b =>
                 {
                     b.HasOne("BugTracker_API.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Bugs")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BugTracker_API.Models.User", b =>
+                {
+                    b.Navigation("Bugs");
                 });
 #pragma warning restore 612, 618
         }
