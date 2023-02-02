@@ -2,6 +2,7 @@
 using BugTracker_API.Data;
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
+using BugTracker_API.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +12,12 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class UserAPIController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IUserRepository _dbUser;
         private readonly IMapper _mapper;
 
-        public UserAPIController(ApplicationDbContext db, IMapper mapper)
+        public UserAPIController(IUserRepository dbUser, IMapper mapper)
         {
-            _db = db;
+            _dbUser = dbUser;
             _mapper = mapper;
         }
 
@@ -24,7 +25,7 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
-            IEnumerable<User> userList = await _db.Users.ToListAsync();
+            IEnumerable<User> userList = await _dbUser.GetAllAsync();
             return Ok(_mapper.Map<List<UserDTO>>(userList));
         }
 
@@ -38,7 +39,7 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == id);
+            var user = await _dbUser.GetAsync(x => x.Id == id);
             if (user == null)
             {
                 return NotFound();
@@ -60,8 +61,7 @@ namespace BugTracker_API.Controllers
 
             User model = _mapper.Map<User>(createDTO);
 
-            await _db.Users.AddAsync(model);
-            await _db.SaveChangesAsync();
+            await _dbUser.CreateAsync(model);
 
             return CreatedAtRoute("GetUser", new { id = model.Id }, model);
         }
@@ -76,14 +76,13 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == id);
+            var user = await _dbUser.GetAsync(x => x.Id == id);
             if (user == null)
             {
                 return NotFound();
             }
 
-            _db.Users.Remove(user);
-           await _db.SaveChangesAsync();
+            await _dbUser.RemoveAsync(user);
 
             return NoContent();
         }
@@ -99,9 +98,9 @@ namespace BugTracker_API.Controllers
                 return BadRequest();
             }
             User model = _mapper.Map<User>(updateDTO);
+            
+            await _dbUser.UpdateAsync(model);
 
-            _db.Users.Update(model);
-            await _db.SaveChangesAsync();
             return NoContent();
         }
     }

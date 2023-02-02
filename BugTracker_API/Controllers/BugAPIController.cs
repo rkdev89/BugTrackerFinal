@@ -2,6 +2,7 @@
 using BugTracker_API.Data;
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
+using BugTracker_API.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Converters;
@@ -12,11 +13,11 @@ namespace BugTracker_API.Controllers
     [ApiController]
     public class BugAPIController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IBugRepository _dbBug;
         private readonly IMapper _mapper;
-        public BugAPIController(ApplicationDbContext db, IMapper mapper)
+        public BugAPIController(IBugRepository dbUser, IMapper mapper)
         {
-            _db = db;
+            _dbBug = dbUser;
             _mapper = mapper;
         }
 
@@ -24,7 +25,7 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<BugDTO>>> GetBugs()
         {
-            IEnumerable<Bug> bugList = await _db.Bugs.ToListAsync();
+            IEnumerable<Bug> bugList = await _dbBug.GetAllAsync();
             return Ok(_mapper.Map<List<BugDTO>>(bugList));
         }
 
@@ -38,7 +39,7 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var bug = await _db.Bugs.FirstOrDefaultAsync(x => x.Id == id);
+            var bug = await _dbBug.GetAsync(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
@@ -59,8 +60,7 @@ namespace BugTracker_API.Controllers
             }
             Bug model = _mapper.Map<Bug>(createDTO);
 
-            await _db.Bugs.AddAsync(model);
-            await _db.SaveChangesAsync();
+            await _dbBug.CreateAsync(model);
 
             return CreatedAtRoute("GetBug", new {id = model.Id }, model);
         }
@@ -75,14 +75,13 @@ namespace BugTracker_API.Controllers
             {
                 return BadRequest();
             }
-            var bug = await _db.Bugs.FirstOrDefaultAsync(x => x.Id == id);
+            var bug = await _dbBug.GetAsync(x => x.Id == id);
             if (bug == null)
             {
                 return NotFound();
             }
 
-            _db.Bugs.Remove(bug);
-            await _db.SaveChangesAsync();
+            await _dbBug.RemoveAsync(bug);
 
             return NoContent();
         }
@@ -99,8 +98,7 @@ namespace BugTracker_API.Controllers
             }
             Bug model = _mapper.Map<Bug>(updateDTO);    
 
-            _db.Bugs.Update(model);
-            await _db.SaveChangesAsync();
+            await _dbBug.UpdateAsync(model);
 
             return NoContent();
         }
