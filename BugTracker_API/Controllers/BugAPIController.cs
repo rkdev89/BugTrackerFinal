@@ -1,8 +1,10 @@
-﻿using BugTracker_API.Data;
+﻿using AutoMapper;
+using BugTracker_API.Data;
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Converters;
 
 namespace BugTracker_API.Controllers
 {
@@ -11,16 +13,19 @@ namespace BugTracker_API.Controllers
     public class BugAPIController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        public BugAPIController(ApplicationDbContext db)
+        private readonly IMapper _mapper;
+        public BugAPIController(ApplicationDbContext db, IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<BugDTO>>> GetBugs()
         {
-            return Ok(await _db.Bugs.ToListAsync());
+            IEnumerable<Bug> bugList = await _db.Bugs.ToListAsync();
+            return Ok(_mapper.Map<List<BugDTO>>(bugList));
         }
 
         [HttpGet("{id::int}", Name ="GetBug")]
@@ -39,29 +44,20 @@ namespace BugTracker_API.Controllers
                 return NotFound();
             }
 
-            return Ok(bug);
+            return Ok(_mapper.Map<BugDTO>(bug));
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<BugDTO>> CreateBug([FromBody]BugCreateDTO bugDTO)
+        public async Task<ActionResult<BugDTO>> CreateBug([FromBody]BugCreateDTO createDTO)
         {
-            if (bugDTO == null)
+            if (createDTO == null)
             {
-                return BadRequest(bugDTO);
+                return BadRequest(createDTO);
             }
-
-            Bug model = new()
-            {
-                Title = bugDTO.Title,
-                Description = bugDTO.Description,
-                DateCreated = bugDTO.DateCreated,
-                Status = bugDTO.Status,
-                User= bugDTO.User,
-                UserId= bugDTO.UserId                
-            };
+            Bug model = _mapper.Map<Bug>(createDTO);
 
             await _db.Bugs.AddAsync(model);
             await _db.SaveChangesAsync();
@@ -95,29 +91,13 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateBug(int id, [FromBody]BugUpdateDTO bugDTO)
+        public async Task<IActionResult> UpdateBug(int id, [FromBody]BugUpdateDTO updateDTO)
         {
-            if (bugDTO == null || id != bugDTO.Id)
+            if (updateDTO == null || id != updateDTO.Id)
             {
                 return BadRequest();
             }
-            //var bug = BugStore.bugList.FirstOrDefault(x => x.BugId == id);
-            //bug.Title = bugDTO.Title;
-            //bug.Description = bugDTO.Description;
-            //bug.Status = bugDTO.Status;
-            //bug.DateCreated = bugDTO.DateCreated;
-            //bug.User.UserId = bugDTO.User.UserId;
-
-            Bug model = new()
-            {
-                Id = bugDTO.Id,
-                Title = bugDTO.Title,
-                Description = bugDTO.Description,
-                DateCreated = bugDTO.DateCreated,
-                Status = bugDTO.Status,
-                User = bugDTO.User,
-                UserId = bugDTO.UserId
-            };
+            Bug model = _mapper.Map<Bug>(updateDTO);    
 
             _db.Bugs.Update(model);
             await _db.SaveChangesAsync();

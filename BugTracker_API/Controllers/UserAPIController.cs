@@ -1,4 +1,5 @@
-﻿using BugTracker_API.Data;
+﻿using AutoMapper;
+using BugTracker_API.Data;
 using BugTracker_API.Models;
 using BugTracker_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +12,20 @@ namespace BugTracker_API.Controllers
     public class UserAPIController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        public UserAPIController(ApplicationDbContext db)
+        private readonly IMapper _mapper;
+
+        public UserAPIController(ApplicationDbContext db, IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<BugDTO>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
-            return Ok(await _db.Users.ToListAsync());
+            IEnumerable<User> userList = await _db.Users.ToListAsync();
+            return Ok(_mapper.Map<List<UserDTO>>(userList));
         }
 
         [HttpGet("{id::int}", Name = "GetUser")]
@@ -39,25 +44,21 @@ namespace BugTracker_API.Controllers
                 return NotFound();
             }
 
-            return Ok(user);
+            return Ok(_mapper.Map<UserDTO>(user));
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<UserDTO>> CreateUser([FromBody] UserCreateDTO userDTO)
+        public async Task<ActionResult<UserDTO>> CreateUser([FromBody] UserCreateDTO createDTO)
         {
-            if (userDTO == null)
+            if (createDTO == null)
             {
-                return BadRequest(userDTO);
+                return BadRequest(createDTO);
             }
 
-            User model = new()
-            {
-                UserName = userDTO.UserName,
-                Bugs = userDTO.Bugs,
-            };
+            User model = _mapper.Map<User>(createDTO);
 
             await _db.Users.AddAsync(model);
             await _db.SaveChangesAsync();
@@ -91,18 +92,14 @@ namespace BugTracker_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDTO userDTO)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDTO updateDTO)
         {
-            if (userDTO == null || id != userDTO.Id)
+            if (updateDTO == null || id != updateDTO.Id)
             {
                 return BadRequest();
             }
-            User model = new()
-            {
-                Id = userDTO.Id,
-                UserName = userDTO.UserName,
-                Bugs = userDTO.Bugs,
-            };
+            User model = _mapper.Map<User>(updateDTO);
+
             _db.Users.Update(model);
             await _db.SaveChangesAsync();
             return NoContent();
