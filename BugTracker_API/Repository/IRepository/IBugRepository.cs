@@ -3,13 +3,8 @@ using System.Linq.Expressions;
 
 namespace BugTracker_API.Repository.IRepository
 {
-    public interface IBugRepository
+    public interface IBugRepository : IRepository<Bug>
     {
-        Task<List<Bug>> GetAllAsync(Expression<Func<Bug, bool>> filter = null);
-        Task<Bug> GetAsync(Expression<Func<Bug, bool>> filter = null);
-        Task CreateAsync(Bug entity);
-        Task RemoveAsync(Bug entity);
-        Task SaveAsync();
-        Task UpdateAsync(Bug entity);
+        Task<Bug> UpdateAsync(Bug entity);
     }
 }

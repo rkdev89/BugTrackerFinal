@@ -7,58 +7,19 @@ using System.Linq.Expressions;
 
 namespace BugTracker_API.Repository
 {
-    public class BugRepository : IBugRepository
+    public class BugRepository :Repository<Bug>, IBugRepository
     {
         private readonly ApplicationDbContext _db;
-        public BugRepository(ApplicationDbContext db)
+        public BugRepository(ApplicationDbContext db): base(db)
         {
             _db = db;
         }
-        public async Task CreateAsync(Bug entity)
-        {
-            await _db.Bugs.AddAsync(entity);
-            await SaveAsync();
-        }
 
-        public async Task<Bug> GetAsync(Expression<Func<Bug, bool>> filter = null)
-        {
-            IQueryable<Bug> query = _db.Bugs;
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            return await query.FirstOrDefaultAsync();
-        }
-
-        public async Task<List<Bug>> GetAllAsync(Expression<Func<Bug, bool>> filter = null)
-        {
-            IQueryable<Bug> query = _db.Bugs;
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            return await query.ToListAsync();
-        }
-
-        public async Task RemoveAsync(Bug entity)
-        {
-            _db.Bugs.Remove(entity);
-            await SaveAsync();
-        }
-
-        public async Task SaveAsync()
-        {
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Bug entity)
+        public async Task<Bug> UpdateAsync(Bug entity)
         {
             _db.Bugs.Update(entity);
-            await SaveAsync();
+            await _db.SaveChangesAsync();
+            return entity;
         }
     }
 }
