@@ -7,6 +7,6 @@ namespace BugTracker_API.Models.Dto
         [Required]
         [MaxLength(30)]
         public string UserName { get; set; }
-        public ICollection<Bug> Bugs { get; set; }
+        //public ICollection<Bug> Bugs { get; set; }
     }
 }

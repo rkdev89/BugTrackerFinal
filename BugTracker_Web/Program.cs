@@ -1,10 +1,17 @@
 using BugTracker_Web;
+using BugTracker_Web.Services;
+using BugTracker_Web.Services.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(typeof(MappingConfig));
+
+builder.Services.AddHttpClient<IBugService, BugService>();
+builder.Services.AddScoped<IBugService, BugService>();
+builder.Services.AddHttpClient<IUserService, UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
