@@ -12,8 +12,8 @@ namespace BugTracker_API.Models.Dto
         [Required]
         public Status Status { get; set; }
         [Required]
-        public DateTime DateCreated { get; set; }
-        public User User { get; set; }
+        public DateTime DateCreated { get; set; } = DateTime.Now;
+        public User? User { get; set; }
         public int UserId { get; set; }
     }
 }
